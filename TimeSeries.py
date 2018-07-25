@@ -111,7 +111,8 @@ def get_tf(text):
     """
     #print("text1"+str(text))
     text=','.join(jieba.cut(text))
-    #print("text2"+str(text))
+    text=text.split(",")
+    print("text"+str(text))
     num_words = len(text)
     word_freq = {}  # 词频dict
     word_tf = {}  # 词的tf值dict
@@ -121,7 +122,7 @@ def get_tf(text):
             if i != j and text[i] != " ":
                 if text[i] == text[j]:
                     word_count += 1
-                    text[j] = " "
+                    #text[j] = " "
         if text[i] != " ":
             # word_freq[text[i]] = word_count
             word_tf[text[i]] = float(word_count / num_words)
@@ -138,7 +139,10 @@ def get_idf(word, corpus_list):
     num_corpus = len(corpus_list)
     count = 0
     for cur_corpus in corpus_list:
-        if word in set(cur_corpus):#此处中文注意分词，不然不准确
+        cur_corpus = ','.join(jieba.cut(cur_corpus))
+        cur_corpus = cur_corpus.split(",")
+        if word in cur_corpus:
+            print(str(word)+str(count))
             count += 1
     idf = math.log(float(num_corpus / (count + 1)))
     return idf
@@ -152,6 +156,7 @@ def get_tfidf(cur_corpus, corpus_list):
     """
     cur_word_tfidf = {}
     word_tf = get_tf(cur_corpus)
+    print("word_tf:"+str(word_tf))
     for word in word_tf:
         tf = word_tf[word]
         idf = get_idf(word, corpus_list)
@@ -190,11 +195,8 @@ def get_corpus(filedir):
 
 
 def NNinput(result,filedir,corpus_list):
-    words=output(result)
+    words=output(result) #按间隔分微博
     num_corpus = len(corpus_list)
-    #print(num_corpus)
-    print(corpus_list[0])
-    #corpus_list=result[2]
     with open('F:\论文汇总\谣言检测\数据\A16rumdect\words.txt', 'w+') as cur_file:
         for i in range(num_corpus):
             word_tfidf = get_tfidf(corpus_list[i], corpus_list)
@@ -215,7 +217,7 @@ cur_file = f.read().replace("\n"," ")
 cur_file = cur_file.split(" ")
 corpus_list.extend(cur_file)
 f.close()
-print("corpus_list:"+str(corpus_list))
+#print("corpus_list:"+str(corpus_list))
 inputN=10
 for filename in os.listdir(filedir):
     path = filedir + '/' + filename
