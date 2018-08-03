@@ -218,7 +218,7 @@ def NNinput(result,filename,corpus_list):
     with open('F:\论文汇总\谣言检测\数据\A16rumdect\dataset\\'+str(filename)+'words.txt', 'w+') as cur_file:
         max_tfidf = get_tfidf(result,corpus_list)
         for i in range(len(max_tfidf)):
-            cur_file.write(max_tfidf[i])
+            cur_file.write(str(max_tfidf[i]))
             cur_file.write("\n")
     return True
 
