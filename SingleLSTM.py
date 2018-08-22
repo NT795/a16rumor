@@ -62,7 +62,7 @@ y_train,y_test=y_data[0:150,:],y_data[150:200,:]
 
 model = Sequential()
 model.add(Masking(mask_value= -1,input_shape=(max(count), 5000,)))
-model.add(Embedding(5000,100))
+#model.add(Embedding(5000,100))
 model.add(LSTM(100))
 #model.add(Dropout(0.5))
 model.add(Dense(2, activation='softmax'))
