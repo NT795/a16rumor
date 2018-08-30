@@ -1,6 +1,6 @@
 from keras.models import Sequential
-from keras.layers import Dense, Dropout
-from keras.layers import Embedding,Masking,Flatten
+from keras.layers import Dense
+from keras.layers import Masking
 from keras.layers import GRU
 from keras.utils import np_utils
 from keras.optimizers import Adagrad
