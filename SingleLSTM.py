@@ -1,5 +1,5 @@
 from keras.models import Sequential
-from keras.layers import Dense, Dropout
+from keras.layers import Dense
 from keras.layers import Embedding,Masking
 from keras.layers import LSTM
 from keras.utils import np_utils
@@ -63,8 +63,8 @@ y_train,y_test=y_data[0:150,:],y_data[150:200,:]
 model = Sequential()
 model.add(Masking(mask_value= -1,input_shape=(max(count), 5000,)))
 #model.add(Embedding(5000,100))
+model.add(Dense(100))
 model.add(LSTM(100))
-#model.add(Dropout(0.5))
 model.add(Dense(2, activation='softmax'))
 '''
 LSTM(output_dim, init='glorot_uniform', inner_init='orthogonal',
@@ -96,7 +96,7 @@ model.compile(optimizer=adagrad,
               metrics=['accuracy'])
 
 
-model.fit(x_train, y_train, batch_size=10, epochs=100)
+model.fit(x_train, y_train, batch_size=10, epochs=10)
 score,acc = model.evaluate(x_test, y_test, batch_size=10)
 print('score:', score)
 print('accuracy:', acc)

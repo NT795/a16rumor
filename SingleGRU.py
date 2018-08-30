@@ -1,13 +1,17 @@
 from keras.models import Sequential
 from keras.layers import Dense, Dropout
-from keras.layers import Embedding,Masking
+from keras.layers import Embedding,Masking,Reshape
 from keras.layers import GRU
 from keras.utils import np_utils
 from keras.optimizers import Adagrad
+from keras.datasets import imdb
 import os
 import numpy as np
-
+"""
+(x_train,y_train),(x_vali,y_vali)=imdb.load_data(num_words=5000)
+print(x_train.shape,y_train.shape,x_vali.shape,y_vali.shape)
      # same as the height of the image
+"""
 np.random.seed(7)  # for reproducibility
 LR = 0.5
 
@@ -60,10 +64,19 @@ y_data = np_utils.to_categorical(y_data[0:200], num_classes=2)
 y_train,y_test=y_data[0:150,:],y_data[150:200,:]
 
 model = Sequential()
-model.add(Masking(mask_value= -1,input_shape=(max(count), 5000,)))
-#model.add(Embedding(5000,100))
+model.add(Masking(mask_value= -1,input_shape=(max(count),5000,)))
+"""
+print(model.input)
+print(model.output_shape)
+model.add(Embedding(5000,100))
+print(model.input)
+print(model.output_shape)
+model.add(Reshape((90,100)))
+"""
+model.add(Dense(100))
+#print(model.output_shape)
 model.add(GRU(100))
-#model.add(Dropout(0.5))
+#print(model.output_shape)
 model.add(Dense(2, activation='softmax'))
 
 adagrad = Adagrad(LR)
