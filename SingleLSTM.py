@@ -1,6 +1,6 @@
 from keras.models import Sequential
-from keras.layers import Dense, Dropout
-from keras.layers import Embedding
+from keras.layers import Dense
+from keras.layers import Embedding,Masking
 from keras.layers import LSTM
 from keras.utils import np_utils
 from keras.optimizers import Adagrad
@@ -9,13 +9,6 @@ import numpy as np
 
      # same as the height of the image
 np.random.seed(7)  # for reproducibility
-
-INPUT_SIZE = 5000     # same as the width of the image
-BATCH_SIZE = 1
-BATCH_INDEX = 0
-OUTPUT_SIZE = 2
-CELL_SIZE = 100
-#TIME_STEPS = 50
 LR = 0.5
 
 filedir='F:\论文汇总\谣言检测\数据\A16rumdect\dataset'
@@ -42,6 +35,15 @@ for filename in os.listdir(filedir):
     index=index+1
     if index==200:
         break
+#通过补充-1将长度统一
+X_data=[]
+for xdata in x_data:
+    if len(xdata)<max(count):
+        for i in range(max(count)-len(xdata)):
+            xdata.append([-1]*5000)
+    X_data.append(xdata)
+X_data=np.array(X_data)
+x_train,x_test=X_data[0:150,:],X_data[150:200,:]
 
 f1 = open('F:\论文汇总\谣言检测\数据\A16rumdect\Weibo.txt', encoding='utf-8')
 y = f1.read().replace("\n", "\\\\")
@@ -59,9 +61,10 @@ y_train,y_test=y_data[0:150,:],y_data[150:200,:]
 
 
 model = Sequential()
-model.add(Embedding(5000,100))
+model.add(Masking(mask_value= -1,input_shape=(max(count), 5000,)))
+#model.add(Embedding(5000,100))
+model.add(Dense(100))
 model.add(LSTM(100))
-#model.add(Dropout(0.5))
 model.add(Dense(2, activation='softmax'))
 '''
 LSTM(output_dim, init='glorot_uniform', inner_init='orthogonal',
@@ -92,12 +95,13 @@ model.compile(optimizer=adagrad,
               loss='mean_squared_error',
               metrics=['accuracy'])
 
-"""
-model.fit(X_train, y_train, batch_size=1, epochs=100)
-score = model.evaluate(X_test, y_test, batch_size=1)
-print('score:', score)
-"""
 
+model.fit(x_train, y_train, batch_size=10, epochs=10)
+score,acc = model.evaluate(x_test, y_test, batch_size=10)
+print('score:', score)
+print('accuracy:', acc)
+
+"""
 total_cost = 0
 total_accuray = 0
 for step in range(150):
@@ -131,3 +135,4 @@ for step in range(150):
         total_cost=total_cost+cost
         total_accuray=total_accuray+accuracy
         #print('test cost: ', cost, 'test accuracy: ', accuracy)
+"""
