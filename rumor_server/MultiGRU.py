@@ -49,10 +49,10 @@ def generate_arrays_from_file(path,batch_size):
                 tempx = 0
                 global maxcount
                 maxcount = max(max(count), maxcount)
-                print("training maxcount:", maxcount)
+                #print("training maxcount:", maxcount)
                 for xdata in x_data:
                     tempx = tempx + 1
-                    print("train_x:", tempx)
+                    #print("train_x:", tempx)
                     if len(xdata) < maxcount:
                         for i in range(maxcount - len(xdata)):
                             xdata.append([-1] * 5000)
@@ -81,7 +81,7 @@ def generate_arrays_from_file(path,batch_size):
                         break
                     if tempy<=epochy:
                         continue
-                    print("train_y:", tempy)
+                    #print("train_y:", tempy)
                     cur_y = cur_y.split(" ")
                     new_y = cur_y[0].split("\t")
                     if len(new_y) == 3:
@@ -127,9 +127,9 @@ for filename in os.listdir(filedir)[TrainLength:TrainLength+TestLength+1]:
 # X_data=[]
 tempx = 0
 print("Test_x:",len(Test_x_data))
+print(Test_x_data[1])
 for xdata in Test_x_data:
     tempx = tempx + 1
-    print("test_x:", tempx)
     if len(xdata) < maxcount:
         for i in range(maxcount - len(xdata)):
             xdata.append([-1] * 5000)
@@ -143,7 +143,7 @@ for xdata in Test_x_data:
 # X_data=np.array(X_data)
 x_test = X_data[0:TestLength, :]
 maxcount=max(max(Test_count),maxcount)
-print("test maxcount:",maxcount)
+#print("test maxcount:",maxcount)
 
 f1 = open('/data/biantian/data/Weibo.txt', encoding='utf-8')
 y = f1.read().replace("\n", "\\\\")
@@ -156,7 +156,7 @@ for cur_y in y:
         continue
     if tempy>TrainLength+TestLength:
         break
-    print("test_y:", tempy)
+    #print("test_y:", tempy)
     cur_y = cur_y.split(" ")
     new_y = cur_y[0].split("\t")
     if len(new_y) == 3:
@@ -165,6 +165,7 @@ for cur_y in y:
 f1.close()
 y_data = np_utils.to_categorical(y_data[0:TestLength], num_classes=2)
 y_test = y_data[0:TestLength, :]
+print(y_test)
 
 
 model = Sequential()
