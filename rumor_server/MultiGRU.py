@@ -11,20 +11,23 @@ np.random.seed(7)  # for reproducibility
 LR = 0.5
 maxcount=95
 TrainLength=3000
-TestLength=1500
+TestLength=1000
 batch=100
 
 filedir='/data/biantian/data/dataset'
 def generate_arrays_from_file(path,batch_size):
+    totalcnt = 0
+    X = []
+    Y = []
     while 1:
-        X = []
-        Y = []
+        #print(totalcnt)
         x_data = []
         index = 0
         count = [0] * batch_size
-        epochy = 0
         #for filename in os.listdir(path)[0:3000]:
-        for filename in os.listdir(path)[0:TrainLength]:
+        if TestLength+totalcnt==TrainLength+TestLength:
+            totalcnt=0
+        for filename in os.listdir(path)[TestLength+totalcnt:TestLength+TrainLength]:
             fx = open(str(path + '/' + filename), encoding='utf-8')
             x = fx.read().replace("[", "").replace("]", "").replace("\n", "\\\\")
             x = x.split("\\\\")
@@ -41,6 +44,8 @@ def generate_arrays_from_file(path,batch_size):
                 continue
             x_data.append(new_x)
             index = index + 1
+            #print("x:",index)
+
             if index == batch_size:
                 #break
                 index=0
@@ -66,43 +71,44 @@ def generate_arrays_from_file(path,batch_size):
                 # X_data=np.array(X_data)
                 # x_train, x_test = X_data[0:1000, :], X_data[1000:1500, :]
                 X = X_data
-                x_data=[]
-                count = [0] * batch_size
-                fy = open('/data/biantian/data/Weibo.txt', encoding='utf-8')
-                y = fy.read().replace("\n", "\\\\")
-                y = y.split("\\\\")
-                y_data = []
-                tempy = 0
-                cnt = 0
-                for cur_y in y:
-                    tempy=tempy+1
-                    #if tempy>3000:
-                    if tempy > TrainLength:
-                        break
-                    if tempy<=epochy:
-                        continue
-                    #print("train_y:", tempy)
-                    cur_y = cur_y.split(" ")
-                    new_y = cur_y[0].split("\t")
-                    if len(new_y) == 3:
-                        cnt = cnt + 1
-                        new1_y = new_y[1].split(":")
-                        y_data.append(new1_y[1])
-                    if cnt == batch_size:
-                        epochy = epochy + cnt
-                        cnt = 0
-                        Y = np_utils.to_categorical(y_data[0:batch_size], num_classes=2)
-                        yield (X, Y)
-                        break
-            X = []
-            Y = []
-    fx.close()
+                break
+            fx.close()
+        fy = open('/data/biantian/data/Weibo.txt', encoding='utf-8')
+        y = fy.read().replace("\n", "\\\\")
+        y = y.split("\\\\")
+        y_data = []
+        cnt=0
+        #print(TestLength+totalcnt)
+        #print(TrainLength+TestLength)
+        #print(y[TestLength+totalcnt:TrainLength+TestLength])
+        for cur_y in y[TestLength+totalcnt:TrainLength+TestLength]:
+            #if tempy>3000:
+            # if tempy <= TestLength+totalcnt:
+            #     print("test1")
+            #     continue
+            # if tempy>TrainLength+TestLength:
+            #     print("test2")
+            #     break
+            #print("train_y:", tempy)
+            cur_y = cur_y.split(" ")
+            new_y = cur_y[0].split("\t")
+            if len(new_y) == 3:
+                cnt = cnt + 1
+                new1_y = new_y[1].split(":")
+                y_data.append(new1_y[1])
+            if cnt == batch_size:
+                totalcnt=totalcnt+cnt
+                Y = np_utils.to_categorical(y_data[0:batch_size], num_classes=2)
+                yield (X, Y)
+                X = []
+                Y = []
+                break
     fy.close()
 
 Test_x_data = []
 Test_index = 0
 Test_count = [0] * TestLength
-for filename in os.listdir(filedir)[TrainLength:TrainLength+TestLength+1]:
+for filename in os.listdir(filedir)[0:TestLength+1]:
     f = open(str(filedir + '/' + filename), encoding='utf-8')
     x = f.read().replace("[", "").replace("]", "").replace("\n", "\\\\")
     x = x.split("\\\\")
@@ -126,8 +132,8 @@ for filename in os.listdir(filedir)[TrainLength:TrainLength+TestLength+1]:
 # 通过补充-1将长度统一
 # X_data=[]
 tempx = 0
-print("Test_x:",len(Test_x_data))
-print(Test_x_data[1])
+#print("Test_x:",len(Test_x_data))
+#print(Test_x_data[1][1])
 for xdata in Test_x_data:
     tempx = tempx + 1
     if len(xdata) < maxcount:
@@ -152,9 +158,10 @@ y_data = []
 tempy = 0
 for cur_y in y:
     tempy = tempy + 1
-    if tempy<=TrainLength:
-        continue
-    if tempy>TrainLength+TestLength:
+    #if tempy<=TrainLength:
+    #    continue
+    #if tempy>TrainLength+TestLength:
+    if tempy > TestLength:
         break
     #print("test_y:", tempy)
     cur_y = cur_y.split(" ")
@@ -162,10 +169,10 @@ for cur_y in y:
     if len(new_y) == 3:
         new1_y = new_y[1].split(":")
         y_data.append(new1_y[1])
+        #print(new1_y[1])
 f1.close()
 y_data = np_utils.to_categorical(y_data[0:TestLength], num_classes=2)
 y_test = y_data[0:TestLength, :]
-print(y_test)
 
 
 model = Sequential()
