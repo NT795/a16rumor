@@ -12,22 +12,24 @@ LR = 0.5
 maxcount=95
 TrainLength=3000
 TestLength=1000
-batch=100
+batch=10
 
 filedir='/data/biantian/data/dataset'
 def generate_arrays_from_file(path,batch_size):
-    totalcnt = 0
-    X = []
-    Y = []
+    global filelist
+    global y_data
     while 1:
         #print(totalcnt)
         x_data = []
         index = 0
         count = [0] * batch_size
+        totalcnt = 0
+        X = []
+        Y = []
         #for filename in os.listdir(path)[0:3000]:
-        if TestLength+totalcnt==TrainLength+TestLength:
-            totalcnt=0
-        for filename in os.listdir(path)[TestLength+totalcnt:TestLength+TrainLength]:
+        # if TestLength+totalcnt==TrainLength+TestLength:
+        #     totalcnt=0
+        for filename in filelist[TestLength:TestLength+TrainLength]:
             fx = open(str(path + '/' + filename), encoding='utf-8')
             x = fx.read().replace("[", "").replace("]", "").replace("\n", "\\\\")
             x = x.split("\\\\")
@@ -47,13 +49,12 @@ def generate_arrays_from_file(path,batch_size):
             #print("x:",index)
 
             if index == batch_size:
-                #break
-                index=0
                 # 通过补充-1将长度统一
                 # X_data=[]
                 tempx = 0
                 global maxcount
                 maxcount = max(max(count), maxcount)
+                count = [0] * batch_size
                 #print("training maxcount:", maxcount)
                 for xdata in x_data:
                     tempx = tempx + 1
@@ -70,45 +71,88 @@ def generate_arrays_from_file(path,batch_size):
                     # X_data.append(xdata)
                 # X_data=np.array(X_data)
                 # x_train, x_test = X_data[0:1000, :], X_data[1000:1500, :]
+                x_data=[]
                 X = X_data
-                break
-            fx.close()
-        fy = open('/data/biantian/data/Weibo.txt', encoding='utf-8')
-        y = fy.read().replace("\n", "\\\\")
-        y = y.split("\\\\")
-        y_data = []
-        cnt=0
-        #print(TestLength+totalcnt)
-        #print(TrainLength+TestLength)
-        #print(y[TestLength+totalcnt:TrainLength+TestLength])
-        for cur_y in y[TestLength+totalcnt:TrainLength+TestLength]:
-            #if tempy>3000:
-            # if tempy <= TestLength+totalcnt:
-            #     print("test1")
-            #     continue
-            # if tempy>TrainLength+TestLength:
-            #     print("test2")
-            #     break
-            #print("train_y:", tempy)
-            cur_y = cur_y.split(" ")
-            new_y = cur_y[0].split("\t")
-            if len(new_y) == 3:
-                cnt = cnt + 1
-                new1_y = new_y[1].split(":")
-                y_data.append(new1_y[1])
-            if cnt == batch_size:
-                totalcnt=totalcnt+cnt
-                Y = np_utils.to_categorical(y_data[0:batch_size], num_classes=2)
+                Y= y_data[TestLength+totalcnt:TestLength+totalcnt+batch_size, :]
+                totalcnt = totalcnt + index
+                index = 0
                 yield (X, Y)
                 X = []
                 Y = []
-                break
-    fy.close()
+                #break
+            fx.close()
+    #     fy = open('/data/biantian/data/Weibo.txt', encoding='utf-8')
+    #     y = fy.read().replace("\n", "\\\\")
+    #     y = y.split("\\\\")
+    #     y_data = []
+    #     cnt=0
+    #     #print(TestLength+totalcnt)
+    #     #print(TrainLength+TestLength)
+    #     #print(y[TestLength+totalcnt:TrainLength+TestLength])
+    #     for cur_y in y[TestLength+totalcnt:TrainLength+TestLength]:
+    #         #if tempy>3000:
+    #         # if tempy <= TestLength+totalcnt:
+    #         #     print("test1")
+    #         #     continue
+    #         # if tempy>TrainLength+TestLength:
+    #         #     print("test2")
+    #         #     break
+    #         #print("train_y:", tempy)
+    #         cur_y = cur_y.split(" ")
+    #         new_y = cur_y[0].split("\t")
+    #         if len(new_y) == 3:
+    #             cnt = cnt + 1
+    #             new1_y = new_y[1].split(":")
+    #             y_data.append(new1_y[1])
+    #         if cnt == batch_size:
+    #             totalcnt=totalcnt+cnt
+    #             Y = np_utils.to_categorical(y_data[0:batch_size], num_classes=2)
+    #             yield (X, Y)
+    #             X = []
+    #             Y = []
+    #             break
+    # fy.close()
+
+#读出所有y标签
+f1 = open('/data/biantian/data/Weibo.txt', encoding='utf-8')
+y = f1.read().replace("\n", "\\\\")
+y = y.split("\\\\")
+y_data = []
+#tempy = 0
+for cur_y in y:
+    # tempy = tempy + 1
+    # #if tempy<=TrainLength:
+    # #    continue
+    # #if tempy>TrainLength+TestLength:
+    # if tempy > TestLength:
+    #     break
+    #print("test_y:", tempy)
+    cur_y = cur_y.split(" ")
+    new_y = cur_y[0].split("\t")
+    if len(new_y) == 3:
+        new1_y = new_y[1].split(":")
+        y_data.append(new1_y[1])
+        #print(new1_y[1])
+f1.close()
+temp_y_data=y_data
+#给数据打乱
+index = [i for i in range(len(os.listdir(filedir)))]
+np.random.shuffle(index)
+indices=0
+filelist=[0]*len(os.listdir(filedir))
+new_y_data=[0]*len(os.listdir(filedir))
+for tempindex in index:
+    filelist[indices] = os.listdir(filedir)[tempindex]
+    new_y_data[indices] = temp_y_data[tempindex]
+    indices=indices+1
+#定义测试集标签
+y_data = np_utils.to_categorical(new_y_data, num_classes=2)
+y_test = y_data[0:TestLength, :]
 
 Test_x_data = []
 Test_index = 0
 Test_count = [0] * TestLength
-for filename in os.listdir(filedir)[0:TestLength+1]:
+for filename in filelist[0:TestLength+1]:
     f = open(str(filedir + '/' + filename), encoding='utf-8')
     x = f.read().replace("[", "").replace("]", "").replace("\n", "\\\\")
     x = x.split("\\\\")
@@ -151,29 +195,6 @@ x_test = X_data[0:TestLength, :]
 maxcount=max(max(Test_count),maxcount)
 #print("test maxcount:",maxcount)
 
-f1 = open('/data/biantian/data/Weibo.txt', encoding='utf-8')
-y = f1.read().replace("\n", "\\\\")
-y = y.split("\\\\")
-y_data = []
-tempy = 0
-for cur_y in y:
-    tempy = tempy + 1
-    #if tempy<=TrainLength:
-    #    continue
-    #if tempy>TrainLength+TestLength:
-    if tempy > TestLength:
-        break
-    #print("test_y:", tempy)
-    cur_y = cur_y.split(" ")
-    new_y = cur_y[0].split("\t")
-    if len(new_y) == 3:
-        new1_y = new_y[1].split(":")
-        y_data.append(new1_y[1])
-        #print(new1_y[1])
-f1.close()
-y_data = np_utils.to_categorical(y_data[0:TestLength], num_classes=2)
-y_test = y_data[0:TestLength, :]
-
 
 model = Sequential()
 model.add(Masking(mask_value= -1,input_shape=(maxcount, 5000,)))
@@ -189,7 +210,7 @@ model.compile(optimizer=adagrad,
               loss='mean_squared_error',
               metrics=['accuracy'])
 
-model.fit_generator(generate_arrays_from_file(filedir,batch_size=batch),validation_data=(x_test, y_test),epochs=10,steps_per_epoch=30)
+model.fit_generator(generate_arrays_from_file(filedir,batch_size=batch),validation_data=(x_test, y_test),epochs=10,steps_per_epoch=300)
 #model.fit(x_train, y_train, batch_size=100, epochs=10)
 #score,acc = model.evaluate(x_test, y_test, batch_size=batch)
 #print('score:', score)
